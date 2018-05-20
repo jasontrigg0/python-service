@@ -1,5 +1,5 @@
 Python-service sets up a simple service with a daemon that runs in the background.\
-It's used with pyservice.Service().run(), which:\
+It's used with pyservice.Service().run(), which:
 1. Starts the daemon if necessary by running the daemon_setup function. Otherwise the client will connect to the existing daemon.
 2. Runs the client_sender function.
 3. Send the client_sender output to the daemon where it is the input for the daemon_main function
