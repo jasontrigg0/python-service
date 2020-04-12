@@ -13,7 +13,6 @@ import glob
 import re
 import os
 import setproctitle
-
 import time
 
 #should use lockfile in /var/run but using ~ for now to avoid sudo
@@ -33,8 +32,9 @@ class Service():
     #https://dpbl.wordpress.com/2017/02/12/a-tutorial-on-python-daemon/
     def __init__(self, name, daemon_setup=empty_fn, daemon_main=empty_fn, client_sender=send_args, client_receiver=print_fn):
         self.name = name
-        self.daemon_setup = daemon_setup #no args
+        self.daemon_setup = daemon_setup #self
         self.daemon_main = daemon_main #array of sys.argv -> string
+        self.daemon_env = {}
         self.client_sender = client_sender #() -> string
         self.client_receiver = client_receiver #string -> ()
     def get_desired_port(self):
@@ -91,14 +91,13 @@ class Service():
         print('running daemon from port {port}'.format(**vars()))
         time.sleep(0.1)
         with daemon.DaemonContext(stdout=sys.stdout, stderr=sys.stderr, pidfile=lockfile):
-            self.daemon_setup()
+            self.daemon_setup(self.daemon_env)
 
             serversocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             serversocket.bind(('localhost', port))
             serversocket.listen(5) # become a server socket, maximum 5 connections
 
             sys.stdout.flush()
-            #TODO: remove this try/except (daemon_loop try/except should suffice)
             self.daemon_loop(serversocket)
 
             serversocket.close()
@@ -110,7 +109,7 @@ class Service():
             connection, address = serversocket.accept()
             input_ = json.loads(read_connection(connection))
             try:
-                out = {"out":self.daemon_main(input_)}
+                out = {"out":self.daemon_main(self.daemon_env, input_)}
             except:
                 out = {"err":traceback.format_exc()}
 
@@ -131,6 +130,7 @@ class Service():
                     retry_cnt = retry_cnt + 1
 
         clientsocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        print(port) #MUST: remove
         clientsocket.connect(('localhost', port))
         clientsocket.send(json.dumps(self.client_sender()).encode('utf-8'))
         output = json.loads(read_connection(clientsocket))

@@ -40,3 +40,14 @@ Run with:
 >>> test.py 3
 6
 ```
+
+
+Troubleshooting:
+"Traceback (most recent call last):
+  File "/tmp/test.py", line 8, in <module>
+    pyservice.Service('test', daemon_main = main).run()
+  File "/usr/local/lib/python3.6/dist-packages/python_service-0.0.7-py3.6.egg/pyservice/service.py", line 84, in run
+  File "/usr/local/lib/python3.6/dist-packages/python_service-0.0.7-py3.6.egg/pyservice/service.py", line 135, in run_client
+ConnectionRefusedError: [Errno 111] Connection refused"
+
+Try deleting ~/.service_*_test.pid and rerunning
